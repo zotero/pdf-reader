@@ -5,7 +5,7 @@ import { RemoteReadAloudProvider } from './remote/provider';
 import { RemoteReadAloudController } from './remote/controller';
 import { BrowserReadAloudProvider } from './browser/provider';
 import { ReadAloudTimestamp, RemoteInterface } from './remote';
-import { getBaseLanguage, getPreferredRegion, resolveLanguage } from './lang';
+import { getBaseLanguage, getFallbackLanguage, getPreferredRegion, resolveLanguage } from './lang';
 
 const URGENT_THRESHOLD_MINUTES = 3;
 
@@ -347,7 +347,7 @@ export class ReadAloudManager {
 		// Reset language if it's no longer available
 		let baseLang = getBaseLanguage(this._lang);
 		if (languages.length && !languages.some(l => getBaseLanguage(l) === baseLang)) {
-			let resolved = resolveLanguage(this._lang, languages) || languages[0];
+			let resolved = resolveLanguage(this._lang, languages) || getFallbackLanguage(languages)!;
 			this._lang = getBaseLanguage(resolved);
 			this._region = null;
 			this._voiceID = null;

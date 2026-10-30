@@ -133,3 +133,18 @@ export function resolveLanguage(lang: string, langs: string[]): string | null {
 
 	return candidates[0];
 }
+
+/**
+ * Pick a language to fall back to when the document language isn't
+ * available: the first of the user's languages that's available, then
+ * English, then the first available language.
+ */
+export function getFallbackLanguage(langs: string[]): string | null {
+	for (let userLang of [...navigator.languages, 'en']) {
+		let resolved = resolveLanguage(userLang, langs);
+		if (resolved) {
+			return resolved;
+		}
+	}
+	return langs[0] ?? null;
+}
