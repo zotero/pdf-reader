@@ -29,16 +29,7 @@ registerHooks({
 		if (specifier.endsWith('dom/common/lib/selector')) {
 			return nextResolve('data:text/javascript,export let isSelector = () => false;', context);
 		}
-		let error;
-		for (let candidate of [specifier, specifier + '.js', specifier + '.mjs', specifier + '.ts']) {
-			try {
-				return nextResolve(candidate, context);
-			}
-			catch (e) {
-				error ||= e;
-			}
-		}
-		throw error;
+		return nextResolve(specifier, context);
 	},
 });
 

@@ -20,21 +20,7 @@ registerHooks({
 			? 'export default "";'
 			: Object.entries(stubs).find(([suffix]) => specifier.endsWith(suffix))?.[1];
 		if (stub) return nextResolve('data:text/javascript,' + encodeURIComponent(stub), context);
-		for (let suffix of ['', '.js', '.mjs', '.ts']) {
-			try {
-				return nextResolve(specifier + suffix, context);
-			}
-			catch {}
-		}
 		return nextResolve(specifier, context);
-	},
-	load(url, context, nextLoad) {
-		if (url.endsWith('/history.ts')) {
-			return { format: 'module', shortCircuit: true, source: ts.transpileModule(
-				readFileSync(new URL(url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }
-			).outputText };
-		}
-		return nextLoad(url, context);
 	},
 });
 const { default: PDFView } = await import('../../src/pdf/pdf-view.js');

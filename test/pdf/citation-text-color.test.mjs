@@ -21,16 +21,7 @@ registerHooks({
 		if (stub) {
 			return next('data:text/javascript,' + encodeURIComponent(stub), context);
 		}
-		let error;
-		for (let candidate of [specifier, specifier + '.js', specifier + '.mjs', specifier + '.ts']) {
-			try {
-				return next(candidate, context);
-			}
-			catch (e) {
-				error ||= e;
-			}
-		}
-		throw error;
+		return next(specifier, context);
 	},
 });
 const [{ default: Page }, { default: PDFView }] = await Promise.all([

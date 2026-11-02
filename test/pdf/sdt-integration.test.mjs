@@ -1,41 +1,8 @@
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
-import { registerHooks } from 'node:module';
 import test from 'node:test';
-import { fileURLToPath } from 'node:url';
 
-const PROJECT_ROOT = new URL('../../', import.meta.url).href;
-const moduleHooks = registerHooks({
-	resolve(specifier, context, nextResolve) {
-		let resolved;
-		try {
-			resolved = nextResolve(specifier, context);
-		}
-		catch (error) {
-			if ((specifier.startsWith('.') || specifier.startsWith('/'))
-					&& !/\.[a-z]+$/i.test(specifier)) {
-				for (let extension of ['.js', '.mjs', '.ts']) {
-					let candidate = new URL(specifier + extension, context.parentURL);
-					if (existsSync(fileURLToPath(candidate))) {
-						resolved = nextResolve(candidate.href, context);
-						break;
-					}
-				}
-			}
-			if (!resolved) throw error;
-		}
-		if (resolved.url.startsWith(PROJECT_ROOT) && resolved.url.endsWith('.ts')) {
-			return { ...resolved, format: 'module-typescript' };
-		}
-		if (resolved.url.startsWith(PROJECT_ROOT) && /\.m?js$/.test(resolved.url)) {
-			return { ...resolved, format: 'module' };
-		}
-		return resolved;
-	},
-});
-const { PDFSDTIntegration } = await import('../../src/pdf/sdt-integration.mjs');
-const { PDFSearchController } = await import('../../src/pdf/pdf-search-controller.mjs');
-moduleHooks.deregister();
+import { PDFSDTIntegration } from '../../src/pdf/sdt-integration.mjs';
+import { PDFSearchController } from '../../src/pdf/pdf-search-controller.mjs';
 
 function deferred() {
 	let resolve;
