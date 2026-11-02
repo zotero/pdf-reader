@@ -1,51 +1,10 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
-import { registerHooks } from 'node:module';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { fileURLToPath } from 'node:url';
 
 import { createSDTSearchData } from '../../src/pdf/sdt-search.mjs';
-
-const PROJECT_ROOT = new URL('../../', import.meta.url).href;
-const moduleHooks = registerHooks({
-	resolve(specifier, context, nextResolve) {
-		let resolved;
-		try {
-			resolved = nextResolve(specifier, context);
-		}
-		catch (error) {
-			if ((specifier.startsWith('.') || specifier.startsWith('/'))
-					&& !/\.[a-z]+$/i.test(specifier)) {
-				for (let extension of ['.js', '.mjs', '.ts']) {
-					let candidate = new URL(specifier + extension, context.parentURL);
-					if (existsSync(fileURLToPath(candidate))) {
-						resolved = nextResolve(candidate.href, context);
-						break;
-					}
-				}
-			}
-			if (!resolved) {
-				throw error;
-			}
-		}
-		if (resolved.url.startsWith(PROJECT_ROOT) && resolved.url.endsWith('.ts')) {
-			return { ...resolved, format: 'module-typescript' };
-		}
-		if (resolved.url.startsWith(PROJECT_ROOT) && /\.m?js$/.test(resolved.url)) {
-			return { ...resolved, format: 'module' };
-		}
-		return resolved;
-	},
-});
-
-const [
-	{ PDFPositionMapper },
-	{ getTextNodeSpans },
-] = await Promise.all([
-	import('../../src/common/sdt/pdf-position-mapper.ts'),
-	import('../../src/common/sdt/position-mapper.ts'),
-]);
-moduleHooks.deregister();
+import { PDFPositionMapper } from '../../src/common/sdt/pdf-position-mapper.ts';
+import { getTextNodeSpans } from '../../src/common/sdt/position-mapper.ts';
 
 function readFixture() {
 	return JSON.parse(readFileSync(

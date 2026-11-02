@@ -1,44 +1,11 @@
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
-import { registerHooks } from 'node:module';
 import test from 'node:test';
-import { fileURLToPath } from 'node:url';
 
 import {
 	isolateCharsToAnchorFlow,
 } from '../../src/pdf/selection-flow.mjs';
-
-const PROJECT_ROOT = new URL('../../', import.meta.url).href;
-const moduleHooks = registerHooks({
-	resolve(specifier, context, nextResolve) {
-		let resolved;
-		try {
-			resolved = nextResolve(specifier, context);
-		}
-		catch (error) {
-			if ((specifier.startsWith('.') || specifier.startsWith('/'))
-					&& !/\.[a-z]+$/i.test(specifier)) {
-				for (let extension of ['.js', '.mjs']) {
-					let candidate = new URL(specifier + extension, context.parentURL);
-					if (existsSync(fileURLToPath(candidate))) {
-						resolved = nextResolve(candidate.href, context);
-						break;
-					}
-				}
-			}
-			if (!resolved) {
-				throw error;
-			}
-		}
-		if (resolved.url.startsWith(PROJECT_ROOT) && /\.m?js$/.test(resolved.url)) {
-			return { ...resolved, format: 'module' };
-		}
-		return resolved;
-	},
-});
-const { getSelectionRangesByPosition } = await import('../../src/pdf/selection.js');
-const { PDFNativeTextSelection } = await import('../../src/pdf/native-text-selection.js');
-moduleHooks.deregister();
+import { getSelectionRangesByPosition } from '../../src/pdf/selection.js';
+import { PDFNativeTextSelection } from '../../src/pdf/native-text-selection.js';
 
 function char(c, pageIndex, offset, flowClass) {
 	return {

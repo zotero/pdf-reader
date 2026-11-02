@@ -94,17 +94,7 @@ registerHooks({
 		if (specifier.endsWith('common/read-aloud/sdt-segments') || specifier.endsWith('./read-aloud/sdt-segments')) {
 			return nextResolve('data:text/javascript,export let buildSDTReadAloudSegments = () => []; export let getSDTLang = () => null;', context);
 		}
-		let error;
-		for (let candidate of [specifier, specifier + '.js', specifier + '.mjs', specifier + '.ts']) {
-			try {
-				let resolved = nextResolve(candidate, context);
-				return resolved.url.endsWith('.ts') ? { ...resolved, format: 'module-typescript' } : resolved;
-			}
-			catch (e) {
-				error ||= e;
-			}
-		}
-		throw error;
+		return nextResolve(specifier, context);
 	},
 });
 

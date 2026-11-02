@@ -1,23 +1,15 @@
 /* global globalThis */
 
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import ts from 'typescript';
+
+import { getFallbackLanguage, normalizeMetadataLanguage } from '../../src/common/read-aloud/lang.ts';
 
 let userLanguages = ['en-US'];
 Object.defineProperty(globalThis, 'navigator', {
 	configurable: true,
 	get: () => ({ languages: userLanguages }),
 });
-
-let source = ts.transpileModule(
-	readFileSync(new URL('../../src/common/read-aloud/lang.ts', import.meta.url), 'utf8'),
-	{ compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }
-).outputText;
-const { getFallbackLanguage, normalizeMetadataLanguage } = await import(
-	'data:text/javascript,' + encodeURIComponent(source)
-);
 
 test('normalizeMetadataLanguage: canonicalizes language tags', () => {
 	assert.equal(normalizeMetadataLanguage('en-US'), 'en-US');

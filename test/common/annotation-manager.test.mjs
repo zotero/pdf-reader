@@ -1,25 +1,11 @@
+/* global globalThis */
+
 import assert from 'node:assert/strict';
-import { registerHooks } from 'node:module';
 import test from 'node:test';
 
 // src/common/lib/utilities.js sniffs the browser at module load
 globalThis.window ??= {};
 
-registerHooks({
-	resolve(specifier, context, nextResolve) {
-		// The DOM selector helpers are TypeScript that plain node can't load
-		if (specifier.endsWith('dom/common/lib/selector')) {
-			return nextResolve('data:text/javascript,export let isSelector = () => false;', context);
-		}
-		try {
-			return nextResolve(specifier, context);
-		}
-		catch {
-			// Extensionless internal imports are resolved by webpack in the app
-			return nextResolve(specifier + '.js', context);
-		}
-	},
-});
 const { default: AnnotationManager } = await import('../../src/common/annotation-manager.js');
 // Well past DEBOUNCE_MAX_TIME (10s), so the first save is never itself debounced
 const START_TIME = 1_000_000;

@@ -1,20 +1,9 @@
 /* global globalThis */
 
 import assert from 'node:assert/strict';
-import { registerHooks } from 'node:module';
 import test, { after } from 'node:test';
 
-// Webpack resolves the renderer's extensionless imports in the app.
-const hooks = registerHooks({
-	resolve(specifier, context, nextResolve) {
-		if (specifier.startsWith('.') && !/\.[a-z]+$/i.test(specifier)) {
-			specifier += '.js';
-		}
-		return nextResolve(specifier, context);
-	},
-});
-const { default: PDFRenderer } = await import('../../src/pdf/pdf-renderer.js');
-hooks.deregister();
+import PDFRenderer from '../../src/pdf/pdf-renderer.js';
 
 const originalWindow = globalThis.window;
 after(() => {
