@@ -23,7 +23,7 @@ import type {
 import type { TextNodeSpan } from '../sdt/position-mapper';
 import { splitTextToChunks } from './segment-split';
 import { detectLang } from '../lib/detect-lang';
-import { getBaseLanguage } from './lang';
+import { getBaseLanguage, normalizeMetadataLanguage } from './lang';
 
 /**
  * The concatenated text of one logical paragraph (a part chain), with
@@ -186,8 +186,12 @@ export function buildSDTReadAloudSegments(
  */
 export function getSDTLang(structure: StructuredDocumentText): string {
 	let props = structure.metadata.source.properties as Record<string, unknown> | undefined;
-	let lang = props?.language || props?.Language || props?.['dc:language'];
-	if (typeof lang === 'string' && lang) {
+	// Fall through to detection if metadata isn't a usable language code
+	// (e.g., "x-none", "und")
+	let lang = normalizeMetadataLanguage(props?.language)
+		|| normalizeMetadataLanguage(props?.Language)
+		|| normalizeMetadataLanguage(props?.['dc:language']);
+	if (lang) {
 		return getBaseLanguage(lang);
 	}
 	// Sample from the middle of the document rather than the start,
