@@ -49,6 +49,7 @@ import LRUCacheMap from "../../common/lib/lru-cache-map";
 import { mode } from "../common/lib/collection";
 import { debounce } from '../../common/lib/debounce';
 import { placeA11yVirtualCursor } from '../../common/lib/utilities';
+import { normalizeMetadataLanguage } from '../../common/read-aloud/lang';
 
 class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 	protected _find: EPUBFindProcessor | null = null;
@@ -111,7 +112,7 @@ class EPUBView extends DOMView<EPUBViewState, EPUBViewData> {
 	}
 
 	get lang(): string {
-		return this.book.packaging.metadata.language || 'en';
+		return normalizeMetadataLanguage(this.book.packaging.metadata.language) || 'en';
 	}
 
 	protected override _handleIFrameLoaded() {

@@ -26,6 +26,18 @@ const DEFAULT_REGIONS: Record<string, string> = {
 	es: 'ES',
 };
 
+// Codes that don't identify a single language
+const NON_LANGUAGE_CODES = new Set([
+	// Undetermined
+	'und',
+	// Multiple
+	'mul',
+	// No linguistic content
+	'zxx',
+	// Uncoded
+	'mis'
+]);
+
 export function getBaseLanguage(lang: string): string {
 	return lang.replace(/-.+$/g, '');
 }
@@ -132,6 +144,36 @@ export function resolveLanguage(lang: string, langs: string[]): string | null {
 	}
 
 	return candidates[0];
+}
+
+/**
+ * Normalize a language tag from document metadata (e.g., "EN-US", "en_US",
+ * "eng") to its canonical form (e.g., "en-US", "en"). Returns null if the
+ * value doesn't contain a valid tag for a single language (e.g., "x-none",
+ * "und").
+ */
+export function normalizeMetadataLanguage(lang: unknown): string | null {
+	if (typeof lang !== 'string') {
+		return null;
+	}
+	// Use the first valid language in a list (e.g., "en; nl")
+	for (let value of lang.split(/[,;]/)) {
+		let canonical;
+		try {
+			// Also maps ISO 639-2/3 codes to ISO 639-1 (e.g., "ger" → "de")
+			canonical = Intl.getCanonicalLocales(value.trim().replace(/_/g, '-'))[0];
+		}
+		catch {
+			continue;
+		}
+		// Longer language subtags are valid syntax but are usually language
+		// names (e.g., "english")
+		let base = getBaseLanguage(canonical);
+		if (!NON_LANGUAGE_CODES.has(base) && base.length <= 3) {
+			return canonical;
+		}
+	}
+	return null;
 }
 
 /**

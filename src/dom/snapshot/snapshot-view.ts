@@ -39,6 +39,7 @@ import { debounceUntilScrollFinishes, isSafari } from "../../common/lib/utilitie
 import { scrollIntoView } from "../common/lib/scroll-into-view";
 import { SORT_INDEX_LENGTH, SORT_INDEX_LENGTH_OLD } from "./defines";
 import { detectLang, sampleMiddle } from '../../common/lib/detect-lang';
+import { normalizeMetadataLanguage } from '../../common/read-aloud/lang';
 import type { StructuredDocumentText } from '../../../structured-document-text/schema';
 import { getBlockNodeByRef } from "../../common/sdt/position-mapper";
 import { imageElementToDataURL } from "../common/lib/sdt-image";
@@ -47,6 +48,8 @@ class SnapshotView extends DOMView<SnapshotViewState, SnapshotViewData> {
 	protected _find: DefaultFindProcessor | null = null;
 
 	private _isDynamicThemeSupported = true;
+
+	private _detectedLang: string | null = null;
 
 	private get _searchContext() {
 		let searchContext = createSearchContext(getVisibleTextNodes(this._iframeDocument.body));
@@ -110,10 +113,14 @@ class SnapshotView extends DOMView<SnapshotViewState, SnapshotViewData> {
 	}
 
 	get lang(): string {
-		let lang = this._iframeDocument.body.lang || this._iframeDocument.documentElement.lang;
+		let lang = normalizeMetadataLanguage(this._iframeDocument.body.lang)
+			|| normalizeMetadataLanguage(this._iframeDocument.documentElement.lang);
 		if (!lang) {
-			lang = detectLang(sampleMiddle(this._iframeDocument.body.innerText, 2500)) || 'en';
-			this._iframeDocument.documentElement.lang = lang;
+			// Missing or unusable (e.g., "x-none") -- detect from content
+			lang = this._detectedLang ??= detectLang(sampleMiddle(this._iframeDocument.body.innerText, 2500)) || 'en';
+			if (!this._iframeDocument.documentElement.lang) {
+				this._iframeDocument.documentElement.lang = lang;
+			}
 		}
 		return lang;
 	}
