@@ -103,6 +103,8 @@ class SDTView extends DOMView<DOMViewState, SDTViewData> {
 
 	private _pageProgressionRTL: boolean | null = null;
 
+	private _lastViewStateJSON: string | null = null;
+
 	private get _searchContext() {
 		let searchContext = createSearchContext(getVisibleTextNodes(this._iframeDocument.body));
 		Object.defineProperty(this, '_searchContext', { value: searchContext });
@@ -651,6 +653,18 @@ class SDTView extends DOMView<DOMViewState, SDTViewData> {
 		this._lastVisibleBlockIndex = blockIndex;
 		if (blockIndex !== null) {
 			this._options.data.syncBaseView(blockIndex);
+		}
+
+		// Position comes from the base view, so only report view settings
+		// (and only when they change, since this runs frequently)
+		let viewState: DOMViewState = {
+			scale: Math.round((this.scale ?? 1) * 1000) / 1000,
+			appearance: this.appearance,
+		};
+		let viewStateJSON = JSON.stringify(viewState);
+		if (viewStateJSON !== this._lastViewStateJSON) {
+			this._lastViewStateJSON = viewStateJSON;
+			this._options.onChangeViewState(viewState);
 		}
 	}
 

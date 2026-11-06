@@ -983,8 +983,9 @@ class Reader {
 	}
 
 	_handleAppearanceChange(params) {
-		for (let view of this._views) {
-			view.setAppearance?.(params);
+		// Only update the appearance of visible views, not hidden base/SDT views
+		for (let view of [this._activePrimaryView, this._activeSecondaryView]) {
+			view?.setAppearance?.(params);
 		}
 	}
 
@@ -1911,7 +1912,21 @@ class Reader {
 		};
 
 		let onChangeViewState = debounce((state) => {
-			this._updateState({ [primary ? 'primaryViewState' : 'secondaryViewState']: state });
+			let stateKey = primary ? 'primaryViewState' : 'secondaryViewState';
+			let previousState = this._state[stateKey];
+			// The base view and the Reading Mode view each report only their
+			// own part of the state
+			if (sdt) {
+				// Nothing to save until the base view has reported a position
+				if (!previousState) {
+					return;
+				}
+				state = { ...previousState, sdtViewState: state };
+			}
+			else if (previousState?.sdtViewState) {
+				state = { ...state, sdtViewState: previousState.sdtViewState };
+			}
+			this._updateState({ [stateKey]: state });
 			if (!primary) {
 				let { splitType, splitSize } = this._state;
 				state = { ...state, splitType, splitSize };
@@ -2148,7 +2163,7 @@ class Reader {
 			}
 			view = new SDTView({
 				...common,
-				viewState: {},
+				viewState: this._state[primary ? 'primaryViewState' : 'secondaryViewState']?.sdtViewState ?? {},
 				data: {
 					structure: this._sdt.structure,
 					mapper: this._sdt.mapper,
